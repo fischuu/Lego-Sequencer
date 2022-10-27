@@ -1,0 +1,257 @@
+---
+title: ""
+date: ""
+output:
+  pdf_document: default
+---
+
+\pagenumbering{gobble}
+
+```{r setup, include=FALSE}
+# Loading the required libraries
+  knitr::opts_chunk$set(echo = TRUE)
+  library("knitr")
+  library("kableExtra")
+  library("serial")
+  library("png")
+  library("grid")
+  library("gridExtra")
+  library("magick")
+
+# Preparing the serial connection to the arduino
+  myArduino <-  serialConnection(
+    port = "COM6",
+    mode = "9600,n,8,1" ,
+    buffering = "none",
+    newline = TRUE,
+    eof = "",
+    translation = "cr",
+    handshake = "none",
+    buffersize = 4096
+  )
+
+# Runtime parameters
+  verbose <- TRUE       # Not used, maybe in later version
+  mode <- "AI"          # Use this, if monsters should be generated via AI / Craiyon
+  #mode <- "Expert"     # This more just creates an empty box and let the user draw the monster
+
+# Switch that to FALSE for production
+  devel <- TRUE
+```
+
+# Monster Name: ____________________________
+
+# Investigator Name: __________________________
+
+# Date: __________________________________
+
+```{r initiate the connection, include=FALSE, eval=TRUE}
+if(!devel){
+  open(myArduino)
+  # Allow for the connection
+  connection.waiting <- TRUE
+  
+  input <- c()
+  while(connection.waiting){
+    Sys.sleep(1)
+    input <- read.serialConnection(myArduino,n=0)
+    input <- strsplit(input, "\n")[[1]]
+    if(length(grep("Found sensor", input))>0 ) connection.waiting <- FALSE
+  }
+}
+```
+
+```{r send starting command, include=FALSE, eval=TRUE}
+if(!devel){
+  write.serialConnection(myArduino, "S")  
+}
+```
+
+```{r pickup the readings, include=FALSE, eval=TRUE}
+if(!devel){
+  seqRun.ongoing <- TRUE
+  # Reset the input
+  input <- c()
+  signal <- c()
+  seqRun.counter <- 0
+  while(seqRun.ongoing){
+    Sys.sleep(0.5)
+    input <- read.serialConnection(myArduino,n=0)
+    input <- strsplit(input, "\n")[[1]]
+    signal <- c(signal, input)
+    if(is.element("##### DONE!", signal)) seqRun.ongoing <- FALSE
+    seqRun.counter <- seqRun.counter + 1
+    if(seqRun.counter > 50) seqRun.ongoing <- FALSE
+    if(verbose) cat(signal[length(signal)], "\n")
+  }
+  signal <- signal[-which(signal=="")]
+}
+```
+
+```{r close connection, include=FALSE, eval=TRUE}
+if(!devel){
+  close(myArduino)
+}
+```
+
+```{r toy data, include=FALSE, eval=TRUE}
+if(devel){
+  signal <- c("Received serial signal: S", "###########################################################", 
+  "##### START SEQUENCING RUN", "###########################################################", 
+  "Pulling in the flowcell", "Sequencing base number 0 - Readings: R: 385 G: 478 B: 579 C: 1511 \t Called base: T / blue ", 
+  "Sequencing base number 1 - Readings: R: 1800 G: 3981 B: 6325 C: 12712 \t Called base: T / blue ", 
+  "Sequencing base number 2 - Readings: R: 7239 G: 1526 B: 1539 C: 10250 \t Called base: G / red ", 
+  "Sequencing base number 3 - Readings: R: 7265 G: 1484 B: 1421 C: 10083 \t Called base: G / red ", 
+  "Sequencing base number 4 - Readings: R: 15937 G: 11691 B: 4460 C: 34704 \t Called base: A / yellow ", 
+  "Sequencing base number 5 - Readings: R: 16279 G: 12031 B: 4538 C: 35557 \t Called base: A / yellow ", 
+  "Sequencing base number 6 - Readings: R: 1840 G: 4338 B: 7028 C: 13977 \t Called base: T / blue ", 
+  "Sequencing base number 7 - Readings: R: 15997 G: 11775 B: 4402 C: 34788 \t Called base: A / yellow ", 
+  "Ejecting the flowcell", "##### DONE!", "###########################################################"
+  )
+}
+```
+
+
+```{r, echo=FALSE}
+OCU1 <- c("A" = "One",
+          "C" = "Two",
+          "G" = "Two",
+          "T" = "Four")
+
+OCU2 <- c("A" = "blue",
+          "C" = "green",
+          "G" = "brown",
+          "T" = "red")
+
+MEM1 <- c("A" = "two-legged",
+          "C" = "four-legged",
+          "G" = "four-legged",
+          "T" = "eight-legged")
+
+MEM2 <- c("A" = "wings",
+          "C" = "antennae",
+          "G" = "horns",
+          "T" = "tail")
+
+FRM1 <- c("A" = "Grass",
+          "C" = "Electric",
+          "G" = "Fire",
+          "T" = "Water")
+
+FRM2 <- c("A" = "Fur",
+          "C" = "Feathers",
+          "G" = "Scales",
+          "T" = "Shell")
+
+PAT10 <- c("A" = "Spots",
+           "C" = "Stripes",
+           "G" = "Patches",
+           "T" = "Patches")
+
+DWF7 <- c("A" = "Happy",
+          "C" = "Grumpy",
+          "G" = "Sleepy",
+          "T" = "Bashful")
+```
+
+
+```{r extract information, include=FALSE}
+pos <- grep("Sequencing base number 0", signal)
+genotypes <- rep("",8)
+colour <- rep("",8)
+for (i in 1:8){
+  tmp <- strsplit(signal[pos], "base: ")[[1]][2]
+  tmp2 <- strsplit(tmp, " / ")
+  genotypes[i] <- tmp2[[1]][1]
+  colour[i] <- trimws(tmp2[[1]][2])
+  pos <- pos + 1
+}
+
+N <- which(!is.element(colour, c("blue", "green", "yellow", "red")))
+if(length(N)>0) colour[N] <- "darkgray"
+
+names(genotypes) <- c("OCU1", "OCU2",
+                      "MEM1", "MEM2",
+                      "FRM1", "FRM2",
+                      "PAT10", "DWF7")
+
+genopheno <- as.matrix(rbind(genotypes, genotypes))
+
+genopheno[2,1] <- paste0(OCU1[genotypes[1]],"-eyed")
+genopheno[2,2] <- paste0(OCU2[genotypes[2]], "-eyed")
+genopheno[2,3] <- MEM1[genotypes[3]]
+genopheno[2,4] <- MEM2[genotypes[4]]
+genopheno[2,5] <- FRM1[genotypes[5]]
+genopheno[2,6] <- FRM2[genotypes[6]]
+genopheno[2,7] <- PAT10[genotypes[7]]
+genopheno[2,8] <- DWF7[genotypes[8]]
+
+rownames(genopheno) <- NULL
+
+```
+
+# Genotypes
+You discovered the following genotypes in your monster:
+
+```{r, echo = FALSE}
+colour <- gsub("blue", "cyan", colour)
+colour <- gsub("red", "pink", colour)
+kable(genopheno, booktabs = T) %>%
+  kable_styling(font_size = 13,
+                latex_options = "HOLD_position")  %>%
+  column_spec(1, width = "3em", background = colour[1]) %>%
+  column_spec(2, width = "3em", background = colour[2]) %>%
+  column_spec(3, width = "3em", background = colour[3]) %>%
+  column_spec(4, width = "3em", background = colour[4]) %>%
+  column_spec(5, width = "3em", background = colour[5]) %>%
+  column_spec(6, width = "3em", background = colour[6]) %>%
+  column_spec(7, width = "3em", background = colour[7]) %>%
+  column_spec(8, width = "3em", background = colour[8])
+```
+
+# Predicted Appearance
+```{r assemble the monster semantic, echo=FALSE}
+pheno <- paste(c("A", DWF7[genotypes[8]], MEM1[genotypes[[3]]], FRM1[genotypes[5]], "Monster with", OCU1[genotypes[1]], OCU2[genotypes[2]], "eyes,", PAT10[genotypes[7]],",", FRM2[genotypes[7]] ,"and", MEM2[genotypes[4]] ), collapse=" ")
+
+```
+
+```{r send informatin to craiyon, echo=FALSE, eval=TRUE}
+if(!devel){
+system(paste0('python generateImages.py "', pheno, '"'))
+}
+```
+
+```{r add monster image, fig.width=13, fig.height=10, echo=FALSE}
+if(mode=="AI"){
+# I need to do this step, as the API generates PNG files (based on file ending, but they are in truth JPEGs)
+# In the interest of time, I just 
+  pngs <- list()
+  for(i in 1:9){
+    jpeg_file <- magick::image_read(paste0("generated/image-",i,".png"))
+    pngs[[i]] <- magick::image_convert(jpeg_file, "png")
+  }
+  
+  img1 <-  rasterGrob(as.raster(pngs[[1]]), interpolate = FALSE)
+  img2 <-  rasterGrob(as.raster(pngs[[2]]), interpolate = FALSE)
+  img3 <-  rasterGrob(as.raster(pngs[[3]]), interpolate = FALSE)
+  img4 <-  rasterGrob(as.raster(pngs[[4]]), interpolate = FALSE)
+  img5 <-  rasterGrob(as.raster(pngs[[5]]), interpolate = FALSE)
+  img6 <-  rasterGrob(as.raster(pngs[[6]]), interpolate = FALSE)
+  img7 <-  rasterGrob(as.raster(pngs[[7]]), interpolate = FALSE)
+  img8 <-  rasterGrob(as.raster(pngs[[8]]), interpolate = FALSE)
+  img9 <-  rasterGrob(as.raster(pngs[[9]]), interpolate = FALSE)
+  grid.arrange(img1, img2, img3,
+               img4, img5, img6,
+               img7, img8, img9, ncol = 3)
+  grid.rect(width = 1, height = 1, gp = gpar(lwd = 2, col = "black", fill = NA))
+} else {
+  plot(NULL, xlim=c(0,1), ylim=c(0,1), xaxt="n", xlab="", yaxt="n", ylab="")  
+}
+
+```
+
+```{r finally close connection, include=FALSE, eval=FALSE}
+open(myArduino)
+close(myArduino)
+```
+
