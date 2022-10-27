@@ -14,3 +14,6 @@ To build the sequencer, a few items need to be available, respective need to be 
 5. Something to build the sequencer, I used also Lego for that, but wood, acryl, etc should do as well
 
 Instead of using an Arduino and stepping motor, I used in this project actually an Elegoo starter kit that contains a compatible microcontroller, stepper and stepper controller. You can find it here https://www.elegoo.com/products/elegoo-uno-most-complete-starter-kit
+
+# Setup
+On the project page you can find a detailed series of pictures, how the Lego sequencer was build and wired
