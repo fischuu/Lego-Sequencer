@@ -16,4 +16,6 @@ To build the sequencer, a few items need to be available, respective need to be 
 Instead of using an Arduino and stepping motor, I used in this project actually an Elegoo starter kit that contains a compatible microcontroller, stepper and stepper controller. You can find it here https://www.elegoo.com/products/elegoo-uno-most-complete-starter-kit
 
 # Setup
-On the project page you can find a detailed series of pictures, how the Lego sequencer was build and wired
+On the project page you can find a detailed series of pictures, how the Lego sequencer was build and wired:
+
+http://danielfischer.name/life/tech-projects/lego-sequencer/
