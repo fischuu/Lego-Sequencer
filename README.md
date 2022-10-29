@@ -13,7 +13,8 @@ To build the sequencer, a few items need to be available, respective need to be 
 4. 2x2 Lego bricks in four colours (preferrably red, green, blue and yellow)
 5. Something to build the sequencer, I used also Lego for that, but wood, acryl, etc should do as well
 6. Installed craiyon API (https://github.com/fischuu/craiyon.py)
-7. Installed Arduino IDE
+7. Installed Arduino IDE (https://www.arduino.cc/en/software)
+8. Install R and RStudio and all required libraries (if you do not have them, install them as you reveive the error messages ;) )
 
 Instead of using an Arduino and stepping motor, I used in this project actually an Elegoo starter kit that contains a compatible microcontroller, stepper and stepper controller. You can find it here https://www.elegoo.com/products/elegoo-uno-most-complete-starter-kit
 
