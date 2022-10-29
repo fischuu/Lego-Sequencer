@@ -54,4 +54,4 @@ Otherwise, all should be good and you can render the document "knit it". Once yo
 In case you have troubles setting up the sequencer, please contact me here via the issues.
 
 # Re-use
-Of course you can use all of the available stuff here for your own projects (as this one here is also already a reuse of the original project Monster-Lab). In case you got inspired by this, it would be nice to drop a line and tell your story also to Sam and Tom!
+Of course you can use all of the available stuff here for your own projects (as this one here is also already a reuse and extension of the original project Monster-Lab). In case you got inspired by this, it would be nice to drop a line and tell your story also to the inventor Sam, e.g. reach out via Twitter @samstudio8 and @monsterdnalab. For reaching out on twitter to me, my user is also there @fischuu .
