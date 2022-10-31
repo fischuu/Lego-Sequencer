@@ -1,0 +1,3 @@
+This folder contains the following documents:
+
+<Lego_Sequencer.doc>  : Genotype to Phenotype table. Sorry for using a Word-Format, this was a last minute work and I had to assemble it quickly. Should be changed to plaintext format...
